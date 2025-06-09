@@ -51,10 +51,8 @@
     let isPremium = false;
     let lastChallengeTime = null;
     const leaderboard = [
-      { name: "HypeLord", points: 90 },
-      { name: "VibeChamp", points: 70 },
-      { name: "You", points: 0 }
-    ];
+       { name: "You", points: 0 }
+     ];
 
     function saveProgress() {
       localStorage.setItem("vibeRushPoints", userPoints);
@@ -108,8 +106,7 @@
           const points = randomChallenge.includes("25 pts") ? 25 : randomChallenge.includes("20 pts") ? 20 : randomChallenge.includes("15 pts") ? 15 : 10;
           userPoints += isPremium ? points * 2 : points;
           streak += 1;
-          leaderboard[2].points = userPoints;
-          leaderboard.sort((a, b) => b.points - a.points);
+          leaderboard[0].points = userPoints; // Update only "You" for now
           lastChallengeTime = now;
           saveProgress();
           updateUI();
@@ -134,3 +131,4 @@
   </script>
 </body>
 </html>
+
