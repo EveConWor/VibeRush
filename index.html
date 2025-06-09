@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>VibeRush - Ireland's Hype</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gradient-to-b from-gray-900 to-purple-900 text-white font-sans">
+  <div id="app" class="min-h-screen flex flex-col items-center p-4">
+    <h1 class="text-3xl font-extrabold mb-4 animate-bounce">VibeRush: Ireland's Hype</h1>
+    <p id="message" class="text-lg mb-4 text-center">Crush challenges, rule the vibe!</p>
+    <div class="w-full max-w-xs">
+      <div class="flex justify-between mb-4 text-sm">
+        <div>Streak: <span id="streak-count" class="font-bold">0</span></div>
+        <div>Points: <span id="points-count" class="font-bold">0</span></div>
+      </div>
+      <button onclick="startChallenge()" class="bg-purple-500 hover:bg-purple-600 text-white font-bold py-2 px-4 rounded-full w-full mb-2">New Vibe</button>
+      <button onclick="buyPremium()" class="bg-pink-500 hover:bg-pink-600 text-white font-bold py-2 px-4 rounded-full w-full mb-2">Premium (€1.99)</button>
+      <div id="challenge" class="mt-4 bg-gray-800 p-3 rounded-lg hidden text-sm"></div>
+      <div id="leaderboard" class="mt-4">
+        <h2 class="text-lg font-bold mb-2">Top Hype Squad</h2>
+        <ul id="leaderboard-list" class="bg-gray-700 p-2 rounded-lg text-sm"></ul>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const challenges = [
+      "Post a quick X vibe with #VibeRush (10 pts)",
+      "Do a 5-second silly dance for Snapchat (10 pts)",
+      "Tag a mate on X to join #VibeRush (15 pts)",
+      "Snap a peace-sign selfie for TikTok (10 pts)",
+      "Share a 5-second laugh on X #VibeRush (10 pts)"
+    ];
+    const premiumChallenges = [
+      "Record a 5-second TikTok lip-sync #VibeRush (20 pts)",
+      "Post a 10-second street vibe clip on Snapchat (20 pts)",
+      "Create a 5-second X story with #VibeRush (15 pts)",
+      "Do a 10-second freestyle pose for TikTok (20 pts)",
+      "Share a 5-second hype chant on X #VibeRush (15 pts)",
+      "Make a 10-second duo dance with a friend for TikTok (25 pts)",
+      "Post a 5-second sunset vibe on Snapchat #VibeRush (15 pts)",
+      "Record a 10-second city vibe walk for X (20 pts)",
+      "Do a 5-second wink-and-smile for TikTok (15 pts)",
+      "Share a 10-second group high-five on X #VibeRush (25 pts)"
+    ];
+
+    let userPoints = 0;
+    let streak = 0;
+    let isPremium = false;
+    let lastChallengeTime = null;
+    const leaderboard = [
+      { name: "HypeLord", points: 90 },
+      { name: "VibeChamp", points: 70 },
+      { name: "You", points: 0 }
+    ];
+
+    function saveProgress() {
+      localStorage.setItem("vibeRushPoints", userPoints);
+      localStorage.setItem("vibeRushStreak", streak);
+      localStorage.setItem("vibeRushPremium", isPremium);
+      localStorage.setItem("vibeRushLastChallenge", lastChallengeTime);
+    }
+
+    function loadProgress() {
+      userPoints = parseInt(localStorage.getItem("vibeRushPoints")) || 0;
+      streak = parseInt(localStorage.getItem("vibeRushStreak")) || 0;
+      isPremium = localStorage.getItem("vibeRushPremium") === "true";
+      lastChallengeTime = localStorage.getItem("vibeRushLastChallenge") || null;
+      updateUI();
+    }
+
+    function updateUI() {
+      document.getElementById("points-count").textContent = userPoints;
+      document.getElementById("streak-count").textContent = streak;
+      const leaderboardList = document.getElementById("leaderboard-list");
+      leaderboardList.innerHTML = "";
+      leaderboard.forEach(user => {
+        const li = document.createElement("li");
+        li.textContent = `${user.name}: ${user.points} pts`;
+        li.className = "p-1";
+        leaderboardList.appendChild(li);
+      });
+    }
+
+    function startChallenge() {
+      const now = Date.now();
+      if (lastChallengeTime && (now - lastChallengeTime) < 20000) {
+        document.getElementById("message").textContent = "Hold up 20 secs for next vibe!";
+        return;
+      }
+      const challengeDiv = document.getElementById("challenge");
+      const messageDiv = document.getElementById("message");
+      const availableChallenges = isPremium ? [...challenges, ...premiumChallenges] : challenges;
+      const randomChallenge = availableChallenges[Math.floor(Math.random() * availableChallenges.length)];
+      challengeDiv.classList.remove("hidden");
+      challengeDiv.innerHTML = `
+        <p>${randomChallenge}</p>
+        <div id="timer" class="mt-1">10 secs left</div>
+      `;
+      let timeLeft = 10;
+      const timer = setInterval(() => {
+        timeLeft--;
+        document.getElementById("timer").textContent = `${timeLeft} secs left`;
+        if (timeLeft <= 0) {
+          clearInterval(timer);
+          const points = randomChallenge.includes("25 pts") ? 25 : randomChallenge.includes("20 pts") ? 20 : randomChallenge.includes("15 pts") ? 15 : 10;
+          userPoints += isPremium ? points * 2 : points;
+          streak += 1;
+          leaderboard[2].points = userPoints;
+          leaderboard.sort((a, b) => b.points - a.points);
+          lastChallengeTime = now;
+          saveProgress();
+          updateUI();
+          challengeDiv.innerHTML = "<p class='text-green-500'>Hype crushed! +" + points + " pts</p>";
+          setTimeout(() => challengeDiv.classList.add("hidden"), 1000);
+          messageDiv.textContent = "Next vibe in 20 secs!";
+        }
+      }, 1000);
+    }
+
+    function buyPremium() {
+      isPremium = true;
+      alert("Premium hype unlocked! Double points + exclusives (€1.99).");
+      saveProgress();
+      updateUI();
+    }
+
+    document.addEventListener("selectstart", (e) => e.preventDefault());
+    document.addEventListener("copy", (e) => e.preventDefault());
+
+    loadProgress();
+  </script>
+</body>
+</html>
